@@ -3,14 +3,17 @@ import random
 import asyncio
 import requests
 import json
-from discord.ext import commands
+from discord.ext import commands, tasks
 import config
-import conditions
+from conditions import condition_translations
+from datetime import datetime
+import logging
 
 intents = discord.Intents.default()
 intents.typing = False
-intents.presences = False
+intents.presences = True
 intents.message_content = True
+intents.members = True
 
 bot = commands.Bot(command_prefix='/', intents=intents)
 
@@ -78,6 +81,47 @@ def get_weather():
 async def on_ready():
     print(f"Вы вошли как {bot.user}")
     await bot.change_presence(status=discord.Status.online, activity=discord.Activity(type=discord.ActivityType.listening, name="Вас"))
+
+# Функция, которая будет вызываться при изменении статуса
+logging.basicConfig(filename='example.log', level=logging.INFO)
+
+@bot.event
+async def on_presence_update(before, after):
+    before_activity = getattr(before.activity, 'name', 'None')
+    after_activity = getattr(after.activity, 'name', 'None')
+    if after_activity != 'None':
+        member_mention = after.mention  # Получить упоминание пользователя
+        if member_mention is None:  # Проверить, есть ли у участника упоминание на сервере
+            member_mention = after.name  # Если нет, то использовать имя пользователя в дискорде
+        channel = random.choice(after.guild.channels)
+        
+        if after_activity == 'Visual Studio':
+            await channel.send(f'{member_mention}, решил покодить в {after_activity}?')
+        elif after_activity == 'Dota 2':
+            await channel.send(f'{member_mention}, как дела с пробитием в {after_activity}?')
+        elif after_activity == 'Farming Simulator 22':
+            await channel.send(f'{member_mention}, весь урожай собрал в {after_activity}?')
+        elif after_activity == 'Microsoft Flight Simulator':
+            await channel.send(f'{member_mention}, куда сегодня летим в {after_activity}?')
+        elif after_activity == 'Warframe':
+            await channel.send(f'{member_mention}, выфармим нового фрейма в {after_activity}?')
+        elif after_activity == 'Lineage II':
+            await channel.send(f'{member_mention}, уже купил пуху дракона в {after_activity}?')
+        elif after_activity == 'Baldur`s Gate 3':
+            await channel.send(f'{member_mention}, сколько уже концовок завершил в {after_activity}?')
+        elif after_activity == 'Garry`s Mod':
+            await channel.send(f'{member_mention}, Москва 2020 уже появилась в {after_activity}?')
+        elif after_activity == 'Sea of Thieves':
+            await channel.send(f'{member_mention}, куда сегодня плывем в {after_activity}?')
+        elif after_activity == 'Euro Truck Simulator 2':
+            await channel.send(f'{member_mention}, может конвой в {after_activity}?')
+        elif after_activity == 'American Truck Simulator':
+            await channel.send(f'{member_mention}, погнали в Лас Вегас в {after_activity}?')
+        elif after_activity == 'Assetto Corsa Competizione':
+            await channel.send(f'{member_mention}, Monza катаешь за 1:47 уже в {after_activity}?')
+        else:
+            await channel.send(f'{member_mention} теперь играет в {after_activity}')
+
     
 @bot.event
 async def on_message(message):
