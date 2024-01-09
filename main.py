@@ -120,7 +120,7 @@ async def on_presence_update(before, after):
         elif after_activity == 'Assetto Corsa Competizione':
             await channel.send(f'{member_mention}, Monza катаешь за 1:47 уже в {after_activity}?')
         else:
-            await channel.send(f'{member_mention} теперь играет в {after_activity}')
+            await channel.send(f'{member_mention}, решил катнуть в {after_activity}')
 
     
 @bot.event
