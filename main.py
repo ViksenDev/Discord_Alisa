@@ -1,92 +1,56 @@
-﻿﻿import discord
+﻿import discord
 import random
 import asyncio
 import requests
+import json
+from discord.ext import commands
+import config
+import conditions
 
 intents = discord.Intents.default()
 intents.typing = False
 intents.presences = False
 intents.message_content = True
 
-bot = discord.Client(intents=intents)
+bot = commands.Bot(command_prefix='/', intents=intents)
 
-# Словарь сообщений
-messages_dict = {
-    "greeting": [
-        "Привет! Я Алиса, готова помочь. Как твои дела?",
-        "Доброго времени суток! Чем я могу быть полезной?",
-        "Здравствуй! Что нового у тебя?",
-        "Приветствую! Как прошел твой день?",
-        "Рада тебя видеть! Что нового в твоей жизни?",
-        "Доброе утро! Как ты сегодня?",
-        "Привет! Что у тебя запланировано на сегодня?",
-        "Здравствуй! Как проходит твой день?",
-        "Привет! Какие у тебя новости?",
-        "Рада снова тебя слышать! Как твои дела?",
-        "Привет! Что нового в мире?",
-    ],
-    "question": [
-        "Какой твой любимый цвет?",
-        "Расскажи о своем любимом фильме.",
-        "Какое твое хобби?",
-        "Если бы ты могла выбрать любую страну для путешествия, куда бы ты поехала?",
-        "Какое твое любимое время года?",
-        "Что тебе нравится делать в свободное время?",
-        "Какая книга тебе больше всего запомнилась?",
-        "Какую музыку ты предпочитаешь слушать?",
-        "Какой твой любимый вид спорта?",
-        "Какой твой самый любимый видеоигры?",
-        "Какой твой любимый вид транспорта?",
-    ],
-    "farewell": [
-        "До свидания! Желаю удачного дня!",
-        "Пока! Возвращайся еще!",
-        "До скорого! Буду ждать твоего возвращения!",
-        "Желаю тебе отличного времени! До встречи!",
-        "До свидания! Пусть у тебя будет замечательный день!",
-        "Прощай! Надеюсь, скоро увидимся снова!",
-        "Удачи! Пусть все твои планы сбудутся!",
-        "До встречи! Помни, что всегда можешь обратиться ко мне!",
-        "До свидания! Пусть тебя сопровождают только хорошие вещи!",
-        "Прощай! Желаю тебе только приятных моментов в жизни!",
-        "До свидания! Надеюсь, скоро снова услышать твой голос!",
-    ],
-    "periodic": [
-        "Привет! Я хотела просто поздороваться.",
-        "Как дела? Что нового у тебя?",
-        "Привет! Я здесь, чтобы поддержать беседу.",
-        "Как проходит твой день? Расскажи мне о своих планах.",
-        "Я надеюсь, у тебя все идет хорошо. Если нужна помощь, обращайся!",
-        "Привет! Как твои дела? Что нового происходит в твоей жизни?",
-        "Как проходит твой день? У меня есть несколько интересных фактов, которыми могу поделиться.",
-        "Привет! Что нового в мире? Есть ли что-то, что тебя заинтересовало?",
-        "Как твои дела? Если нужна поддержка или просто поговорить, я здесь для тебя.",
-        "Привет! Что нового в твоей жизни? Есть ли у тебя какие-то планы на ближайшее время?",
-        "Как ты? Я надеюсь, у тебя все отлично. Если есть что-то, о чем хочешь поговорить, я готова выслушать.",
-    ]
-}
+is_paused = False
+    
+@bot.command(name='start')
+async def start_command(ctx):
+    global is_paused
+    is_paused = False  # сбрасываем флаг паузы
+    await ctx.send("Привет! Я - Алиса! И я снова тут!")
+    await bot.change_presence(status=discord.Status.online, activity = discord.Activity(type=discord.ActivityType.listening, name="Вас"))
 
-# Функция обработки входящих сообщений
-def process_message(message):
-    if any(word in message for word in ["привет", "здравствуй", "добр", "Алиса", "Alisa"]):
-        response = random.choice(messages_dict["greeting"])
-    elif any(word in message for word in ["погода", "температура", "прогноз"]):
-        weather = get_weather()
-        response = f"Прогноз погоды: {weather}"
-    elif any(word in message for word in ["пока", "до свидания"]):
-        response = random.choice(messages_dict["farewell"])
-    elif "?" in message:
-        response = random.choice(messages_dict["question"])
-    else:
-        response = None
+@bot.command(name='pause')
+async def pause_bot(ctx):
+    global is_paused
+    is_paused = True
+    await ctx.send("Всё, поняла, затыкаюсь.")
+    await bot.change_presence(status=discord.Status.idle, activity = discord.Activity(type=discord.ActivityType.listening, name="только себя"))
+    await asyncio.sleep(300)
 
-    print(f"Сообщение: {message}")
-    print(f"Ответ: {response}")
+        
+# Загрузка вопросов и ответов из qa.json
+def load_qa():
+    try:
+        with open('qa.json', 'r', encoding='utf-8') as f:
+            qa_dict = json.load(f)
+        print("Вопросы и ответы успешно загружены из JSON")
+    except Exception as e:
+        print(f"Ошибка при загрузке 'qa.json': {e}")
+        qa_dict = {}
+    return qa_dict
 
-    if response:
-        print(f"Сообщение: {message}")
-        print(f"Ответ: {response}")
+qa_dict = load_qa()
 
+def process_message(text):
+    response = None
+    for key in qa_dict:
+        if key.lower() in text:  # Проверка наличия ключевого слова в тексте сообщения, игнорируя регистр символов
+            response = random.choice(qa_dict[key])
+            break
     return response
 
 def get_weather():
@@ -98,52 +62,69 @@ def get_weather():
     data = response.json()
 
     condition = data["current"]["condition"]["text"]
-    temperature = data["current"]["temp_c"]
 
-    return f"Сейчас в {city} {condition}, температура: {temperature}°C"
+
+    condition_translation = condition_translations.get(condition, condition)
+    temperature = data["current"]["temp_c"]
+    wind =  data["current"]["wind_mph"]
+    wind2 = data["current"]["wind_degree"]
+    gust = data["current"]["gust_mph"]
+    vis = data["current"]["vis_km"]
+
+    return f"## **   Сейчас в Москве:** \n* {condition_translation}\n- Температура: {temperature}°C\n- Ветер {wind2}°, {wind} м/с,\n- Порывы {gust} м/с \n- Видимость {vis} км "
+
 
 @bot.event
 async def on_ready():
-    print(f"We have logged in as {bot.user}")
-
+    print(f"Вы вошли как {bot.user}")
+    await bot.change_presence(status=discord.Status.online, activity=discord.Activity(type=discord.ActivityType.listening, name="Вас"))
+    
 @bot.event
 async def on_message(message):
     if message.author == bot.user or not message.content:
         return
 
-    response = process_message(message.content)
-
-    if response is not None:
-        await message.channel.send(response)
-
-async def send_periodic_messages():
-    await bot.wait_until_ready()
-    
-    channel1 = bot.get_channel(515483857126948864)
-    channel2 = bot.get_channel(515483542361341954)
-
-    if channel1 is None or channel2 is None:
-        print("Не удалось найти каналы. Проверьте правильность указанных ID каналов.")
+    if is_paused and message.content.lower() != "/start":
+        if "алиса" in message.content.lower():
+            start_command_ctx = await bot.get_context(message)
+            await start_command_ctx.invoke(bot.get_command('start'))
         return
 
-    channels = [channel1, channel2]
+    if "заткнись" in message.content.lower():
+        await pause_bot(message.channel)
+        return
 
-    while not bot.is_closed():
-        channel = random.choice(channels)
-        response = random.choice(messages_dict["periodic"])
+    await bot.process_commands(message)
+    if message.content.startswith('/'):
+        return
 
-        try:
-            await channel.send(response)
-        except discord.errors.Forbidden:
-            print(f"Невозможно отправить сообщение в канал {channel.name}. Продолжение выполнения...")
-            continue
-        else:
-            print(f"Сообщение успешно отправлено в канал {channel.name}.")
 
-        interval = random.randint(2400, 7200)
-        await asyncio.sleep(interval)
 
+    # Текстовая часть для обработки обычных сообщений
+    print(f"Получено сообщение: {message.content}")
+
+    # Приведение текста сообщения к нижнему регистру
+    text = message.content.lower()
+
+    # Проверяем, содержится ли в сообщении слово 'погода'
+    if 'погода' in text:
+        weather_report = get_weather()  # Предполагаем, что функция get_weather() существует
+        await message.channel.send(weather_report)
+        print(f"Отправлено погодное уведомление: {weather_report}")
+        return
+
+    # Предполагаем, что функция process_message() существует и обрабатывает сообщение
+    response = process_message(text)
+
+    # Если функция process_message() возвращает не None, отправляем ответ в чат
+    if response is not None:
+        await message.channel.send(response)
+        print(f"Отправлен ответ: {response}")
+
+
+# В конце основной функции тоже добавлен вывод в консоль
 async def main():
-    await bot.start('MTE5MzgxODI1MDM3NTYxMDM5OA.GrJ4xL.rvceXus2bgh17eAhlMxcsP0I4WfmnwUHp564BU')
+    print("Запуск Алисы...")
+    await bot.start(config.TOKEN)
 
 asyncio.run(main())
