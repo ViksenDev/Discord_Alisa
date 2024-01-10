@@ -156,14 +156,14 @@ async def on_presence_update(before, after):
               #  await channel_without_category.send(message)
             #if channel_in_category:
                # await channel_in_category.send(message)            
-        elif after_activity == 'Lineage II':
+        elif 'Lineage' in after_activity:
             message = f'{member_mention}, уже купил пуху дракона в {after_activity}?'
             print(message)  # Дублирование сообщения в консоль
             if channel_without_category:
                 await channel_without_category.send(message)
             if channel_in_category:
                 await channel_in_category.send(message)
-        elif after_activity == 'Baldur`s Gate 3':
+        elif 'Gate 3' in after_activity:
             message = f'{member_mention}, сколько уже концовок завершил в {after_activity}?'
             print(message)  # Дублирование сообщения в консоль
             if channel_without_category:
