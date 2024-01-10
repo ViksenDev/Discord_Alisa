@@ -89,7 +89,8 @@ logging.basicConfig(filename='example.log', level=logging.INFO)
 async def on_presence_update(before, after):
     before_activity = getattr(before.activity, 'name', 'None')
     after_activity = getattr(after.activity, 'name', 'None')
-    if after_activity != 'None':
+    
+    if after_activity != 'None' and before_activity != after_activity:
         member_mention = after.mention  # Получить упоминание пользователя
         if member_mention is None:  # Проверить, есть ли у участника упоминание на сервере
             member_mention = after.name  # Если нет, то использовать имя пользователя в дискорде
@@ -204,6 +205,7 @@ async def on_presence_update(before, after):
                 await channel_without_category.send(message)
             if channel_in_category:
                 await channel_in_category.send(message)
+
 
 
 
