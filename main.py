@@ -30,7 +30,7 @@ async def start_command(ctx):
 async def pause_bot(ctx):
     global is_paused
     is_paused = True
-    await ctx.send("Всё, поняла, затыкаюсь.")
+    await ctx.send("Всё, поняла, молчу.")
     await bot.change_presence(status=discord.Status.idle, activity = discord.Activity(type=discord.ActivityType.listening, name="только себя"))
     await asyncio.sleep(300)
 
@@ -114,7 +114,7 @@ async def on_presence_update(before, after):
                 print(f"No text channels in the guild {guild}.")
         
         if after_activity == 'Visual Studio':
-            message = f'{member_mention}, решил покодить в {after_activity}?'
+            message = f'{member_mention}, решил написать программу в {after_activity}?'
             print(message)  # Дублирование сообщения в консоль
             if channel_without_category:
                 await channel_without_category.send(message)
@@ -199,7 +199,7 @@ async def on_presence_update(before, after):
             if channel_in_category:
                 await channel_in_category.send(message)
         elif after_activity == 'Assetto Corsa Competizione':
-            message = f'{member_mention}, Monza катаешь за 1:47 уже в {after_activity}?'
+            message = f'{member_mention}, ставишь новые рекорды в {after_activity}?'
             print(message)  # Дублирование сообщения в консоль
             if channel_without_category:
                 await channel_without_category.send(message)
