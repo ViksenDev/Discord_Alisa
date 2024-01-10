@@ -157,7 +157,7 @@ async def on_presence_update(before, after):
             print(message)  # Дублирование сообщения в консоль
             await channel.send(message)
         else:
-            message = f'{member_mention}, решил катнуть в {after_activity}'
+            message = f'{member_mention}, решил катнуть в {after_activity}?'
             print(message)  # Дублирование сообщения в консоль
             await channel.send(message)
 
