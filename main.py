@@ -10,7 +10,7 @@ from datetime import datetime
 import logging
 
 intents = discord.Intents.default()
-intents.typing = False
+intents.typing = True
 intents.presences = True
 intents.message_content = True
 intents.members = True
@@ -33,8 +33,7 @@ async def pause_bot(ctx):
     await ctx.send("Всё, поняла, молчу.")
     await bot.change_presence(status=discord.Status.idle, activity = discord.Activity(type=discord.ActivityType.listening, name="только себя"))
     await asyncio.sleep(300)
-
-        
+       
 # Загрузка вопросов и ответов из qa.json
 def load_qa():
     try:
@@ -81,6 +80,24 @@ def get_weather():
 async def on_ready():
     print(f"Вы вошли как {bot.user}")
     await bot.change_presence(status=discord.Status.online, activity=discord.Activity(type=discord.ActivityType.listening, name="Вас"))
+
+@bot.event
+async def on_message(message):
+    if message.content.endswith('?'):
+        channel = message.channel
+        guild = message.guild
+        author = message.author
+        messages = []
+
+        async for msg in channel.history(limit=10, before=message):
+            if msg.author != author:
+                messages.append({
+                    'question': message.content,
+                    'answer': msg.content
+                })
+
+        with open('new_qa.json', 'a') as file:
+            json.dump(messages, file)    
 
 # Функция, которая будет вызываться при изменении статуса
 logging.basicConfig(filename='example.log', level=logging.INFO)
@@ -232,6 +249,7 @@ async def on_message(message):
     if "заткнись" in message.content.lower():
         await pause_bot(message.channel)
         return
+
 
     await bot.process_commands(message)
     if message.content.startswith('/'):
