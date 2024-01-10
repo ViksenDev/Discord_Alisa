@@ -93,34 +93,75 @@ async def on_presence_update(before, after):
         member_mention = after.mention  # Получить упоминание пользователя
         if member_mention is None:  # Проверить, есть ли у участника упоминание на сервере
             member_mention = after.name  # Если нет, то использовать имя пользователя в дискорде
-        channel = random.choice(after.guild.channels)
+        guild = after.guild  # Объявление переменной guild
+        if guild.categories:  # Проверка наличия категорий
+            category = guild.categories[0]
+            if category.channels:  # Проверка наличия каналов в категории
+                channel = category.channels[0]
+            else:
+                print("No channels in the category.")
+        else:
+            # Если нет категорий, отправляем в первый текстовый канал без категории
+            text_channels = [channel for channel in guild.channels if isinstance(channel, discord.TextChannel)]
+            if text_channels:
+                channel = text_channels[0]
+            else:
+                print("No text channels in the guild.")
         
         if after_activity == 'Visual Studio':
-            await channel.send(f'{member_mention}, решил покодить в {after_activity}?')
+            message = f'{member_mention}, решил покодить в {after_activity}?'
+            print(message)  # Дублирование сообщения в консоль
+            await channel.send(message)
         elif after_activity == 'Dota 2':
-            await channel.send(f'{member_mention}, как дела с пробитием в {after_activity}?')
+            message = f'{member_mention}, как дела с пробитием в {after_activity}?'
+            print(message)  # Дублирование сообщения в консоль
+            await channel.send(message)
         elif after_activity == 'Farming Simulator 22':
-            await channel.send(f'{member_mention}, весь урожай собрал в {after_activity}?')
+            message = f'{member_mention}, весь урожай собрал в {after_activity}?'
+            print(message)  # Дублирование сообщения в консоль
+            await channel.send(message)
         elif after_activity == 'Microsoft Flight Simulator':
-            await channel.send(f'{member_mention}, куда сегодня летим в {after_activity}?')
+            message = f'{member_mention}, куда сегодня летим в {after_activity}?'
+            print(message)  # Дублирование сообщения в консоль
+            await channel.send(message)
         elif after_activity == 'Warframe':
-            await channel.send(f'{member_mention}, выфармим нового фрейма в {after_activity}?')
+            message = f'{member_mention}, выфармим нового фрейма в {after_activity}?'
+            print(message)  # Дублирование сообщения в консоль
+            await channel.send(message)
         elif after_activity == 'Lineage II':
-            await channel.send(f'{member_mention}, уже купил пуху дракона в {after_activity}?')
+            message = f'{member_mention}, уже купил пуху дракона в {after_activity}?'
+            print(message)  # Дублирование сообщения в консоль
+            await channel.send(message)
         elif after_activity == 'Baldur`s Gate 3':
-            await channel.send(f'{member_mention}, сколько уже концовок завершил в {after_activity}?')
+            message = f'{member_mention}, сколько уже концовок завершил в {after_activity}?'
+            print(message)  # Дублирование сообщения в консоль
+            await channel.send(message)
         elif after_activity == 'Garry`s Mod':
-            await channel.send(f'{member_mention}, Москва 2020 уже появилась в {after_activity}?')
+            message = f'{member_mention}, Москва 2020 уже появилась в {after_activity}?'
+            print(message)  # Дублирование сообщения в консоль
+            await channel.send(message)
         elif after_activity == 'Sea of Thieves':
-            await channel.send(f'{member_mention}, куда сегодня плывем в {after_activity}?')
+            message = f'{member_mention}, куда сегодня плывем в {after_activity}?'
+            print(message)  # Дублирование сообщения в консоль
+            await channel.send(message)
         elif after_activity == 'Euro Truck Simulator 2':
-            await channel.send(f'{member_mention}, может конвой в {after_activity}?')
+            message = f'{member_mention}, может конвой в {after_activity}?'
+            print(message)  # Дублирование сообщения в консоль
+            await channel.send(message)
         elif after_activity == 'American Truck Simulator':
-            await channel.send(f'{member_mention}, погнали в Лас Вегас в {after_activity}?')
+            message = f'{member_mention}, погнали в Лас Вегас в {after_activity}?'
+            print(message)  # Дублирование сообщения в консоль
+            await channel.send(message)
         elif after_activity == 'Assetto Corsa Competizione':
-            await channel.send(f'{member_mention}, Monza катаешь за 1:47 уже в {after_activity}?')
+            message = f'{member_mention}, Monza катаешь за 1:47 уже в {after_activity}?'
+            print(message)  # Дублирование сообщения в консоль
+            await channel.send(message)
         else:
-            await channel.send(f'{member_mention}, решил катнуть в {after_activity}')
+            message = f'{member_mention}, решил катнуть в {after_activity}'
+            print(message)  # Дублирование сообщения в консоль
+            await channel.send(message)
+
+
 
     
 @bot.event
