@@ -93,73 +93,118 @@ async def on_presence_update(before, after):
         member_mention = after.mention  # Получить упоминание пользователя
         if member_mention is None:  # Проверить, есть ли у участника упоминание на сервере
             member_mention = after.name  # Если нет, то использовать имя пользователя в дискорде
-        guild = after.guild  # Объявление переменной guild
-        if guild.categories:  # Проверка наличия категорий
+        guild = after.guild  # Получить сервер, на котором произошло изменение активности
+        channel_without_category = None  # Инициализация переменной channel_without_category
+        channel_in_category = None  # Инициализация переменной channel_in_category
+        if guild.categories:
             category = guild.categories[0]
-            if category.channels:  # Проверка наличия каналов в категории
-                channel = category.channels[0]
+            if category.channels:
+                channel_in_category = category.channels[10]
+                print(f"Selected channel in category on {guild}: {category.name} {channel_in_category.name}")
+                # Здесь можно добавить отправку сообщения в выбранный канал в категории
             else:
-                print("No channels in the category.")
+                print(f"No channels in the category on {guild}.")
         else:
-            # Если нет категорий, отправляем в первый текстовый канал без категории
-            text_channels = [channel for channel in guild.channels if isinstance(channel, discord.TextChannel)]
-            if text_channels:
-                channel = text_channels[0]
+            text_channels = [ch for ch in guild.channels if isinstance(ch, discord.TextChannel) and ch.guild == guild]
+            if len(text_channels) > 1:
+                channel_without_category = text_channels[1]
+                print(f"Selected text channel on {guild}: {channel_without_category.name}")
             else:
-                print("No text channels in the guild.")
+                print(f"No text channels in the guild {guild}.")
         
         if after_activity == 'Visual Studio':
             message = f'{member_mention}, решил покодить в {after_activity}?'
             print(message)  # Дублирование сообщения в консоль
-            await channel.send(message)
+            if channel_without_category:
+                await channel_without_category.send(message)
+            if channel_in_category:
+                await channel_in_category.send(message)
+
         elif after_activity == 'Dota 2':
             message = f'{member_mention}, как дела с пробитием в {after_activity}?'
             print(message)  # Дублирование сообщения в консоль
-            await channel.send(message)
+            if channel_without_category:
+                await channel_without_category.send(message)
+            if channel_in_category:
+                await channel_in_category.send(message)
         elif after_activity == 'Farming Simulator 22':
             message = f'{member_mention}, весь урожай собрал в {after_activity}?'
             print(message)  # Дублирование сообщения в консоль
-            await channel.send(message)
+            if channel_without_category:
+                await channel_without_category.send(message)
+            if channel_in_category:
+                await channel_in_category.send(message)
         elif after_activity == 'Microsoft Flight Simulator':
             message = f'{member_mention}, куда сегодня летим в {after_activity}?'
             print(message)  # Дублирование сообщения в консоль
-            await channel.send(message)
+            if channel_without_category:
+                await channel_without_category.send(message)
+            if channel_in_category:
+                await channel_in_category.send(message)
         elif after_activity == 'Warframe':
             message = f'{member_mention}, выфармим нового фрейма в {after_activity}?'
             print(message)  # Дублирование сообщения в консоль
-            await channel.send(message)
+            if channel_without_category:
+                await channel_without_category.send(message)
+            if channel_in_category:
+                await channel_in_category.send(message)
         elif after_activity == 'Lineage II':
             message = f'{member_mention}, уже купил пуху дракона в {after_activity}?'
             print(message)  # Дублирование сообщения в консоль
-            await channel.send(message)
+            if channel_without_category:
+                await channel_without_category.send(message)
+            if channel_in_category:
+                await channel_in_category.send(message)
         elif after_activity == 'Baldur`s Gate 3':
             message = f'{member_mention}, сколько уже концовок завершил в {after_activity}?'
             print(message)  # Дублирование сообщения в консоль
-            await channel.send(message)
+            if channel_without_category:
+                await channel_without_category.send(message)
+            if channel_in_category:
+                await channel_in_category.send(message)
         elif after_activity == 'Garry`s Mod':
             message = f'{member_mention}, Москва 2020 уже появилась в {after_activity}?'
             print(message)  # Дублирование сообщения в консоль
-            await channel.send(message)
+            if channel_without_category:
+                await channel_without_category.send(message)
+            if channel_in_category:
+                await channel_in_category.send(message)
         elif after_activity == 'Sea of Thieves':
             message = f'{member_mention}, куда сегодня плывем в {after_activity}?'
             print(message)  # Дублирование сообщения в консоль
-            await channel.send(message)
+            if channel_without_category:
+                await channel_without_category.send(message)
+            if channel_in_category:
+                await channel_in_category.send(message)
         elif after_activity == 'Euro Truck Simulator 2':
             message = f'{member_mention}, может конвой в {after_activity}?'
             print(message)  # Дублирование сообщения в консоль
-            await channel.send(message)
+            if channel_without_category:
+                await channel_without_category.send(message)
+            if channel_in_category:
+                await channel_in_category.send(message)
         elif after_activity == 'American Truck Simulator':
             message = f'{member_mention}, погнали в Лас Вегас в {after_activity}?'
             print(message)  # Дублирование сообщения в консоль
-            await channel.send(message)
+            if channel_without_category:
+                await channel_without_category.send(message)
+            if channel_in_category:
+                await channel_in_category.send(message)
         elif after_activity == 'Assetto Corsa Competizione':
             message = f'{member_mention}, Monza катаешь за 1:47 уже в {after_activity}?'
             print(message)  # Дублирование сообщения в консоль
-            await channel.send(message)
+            if channel_without_category:
+                await channel_without_category.send(message)
+            if channel_in_category:
+                await channel_in_category.send(message)
         else:
             message = f'{member_mention}, решил катнуть в {after_activity}?'
             print(message)  # Дублирование сообщения в консоль
-            await channel.send(message)
+            if channel_without_category:
+                await channel_without_category.send(message)
+            if channel_in_category:
+                await channel_in_category.send(message)
+
 
 
 
@@ -192,7 +237,7 @@ async def on_message(message):
     text = message.content.lower()
 
     # Проверяем, содержится ли в сообщении слово 'погода'
-    if 'погода' in text:
+    if 'погод' in text:
         weather_report = get_weather()  # Предполагаем, что функция get_weather() существует
         await message.channel.send(weather_report)
         print(f"Отправлено погодное уведомление: {weather_report}")
