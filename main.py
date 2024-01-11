@@ -107,7 +107,38 @@ async def ym(ctx):
     # Присоединяемся к голосовому каналу автора команды
     voice_channel = ctx.author.voice.channel
     voice_client = await voice_channel.connect()
+        await ctx.send('Включаю музыку..')
+
+    # Воспроизводим поток музыки
+    voice_client.play(discord.FFmpegPCMAudio(stream_url))
     
+    # Ожидаем окончания потока музыки
+    while voice_client.is_playing():
+        await asyncio.sleep(1)
+    
+    # Отключаемся от голосового канала
+    await voice_client.disconnect()
+
+@bot.command()
+async def next(ctx):
+    # Проверяем, что автор команды находится в голосовом канале
+    if ctx.author.voice is None:
+        await ctx.send('Вы должны находиться в голосовом канале, чтобы использовать эту команду.')
+        return
+    
+    # Проверяем, что бот находится в голосовом канале
+    voice_client = discord.utils.get(bot.voice_clients, guild=ctx.guild)
+    if voice_client is None:
+        await ctx.send('Бот не находится в голосовом канале.')
+        return
+    
+    # Останавливаем воспроизведение музыки
+    voice_client.stop()
+    
+    # Выбираем случайный поток музыки из другого плейлиста
+    stream_url = random.choice(music_streams)
+        await ctx.send('Включаю другой плейлист')
+
     # Воспроизводим поток музыки
     voice_client.play(discord.FFmpegPCMAudio(stream_url))
     
@@ -449,6 +480,12 @@ async def on_message(message):
     if 'выключ' in text:
         command_ctx = await bot.get_context(message)
         await command_ctx.invoke(bot.get_command('ym_off'))
+        return
+    
+    # Проверяем, содержится ли в сообщении слово 'некст'
+    if 'некст' in text:
+        command_ctx = await bot.get_context(message)
+        await command_ctx.invoke(bot.get_command('next'))
         return
 
     # Предполагаем, что функция process_message() существует и обрабатывает сообщение
