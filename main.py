@@ -9,6 +9,8 @@ from conditions import condition_translations
 import datetime
 import logging
 import os
+import urllib.request
+import praw
 
 intents = discord.Intents.default()
 intents.typing = True
@@ -20,14 +22,14 @@ bot = commands.Bot(command_prefix='/', intents=intents)
 
 is_paused = False
     
-@bot.command(name='start')
+@bot.command(name='start', description="Позвать Алису")
 async def start_command(ctx):
     global is_paused
     is_paused = False  # сбрасываем флаг паузы
     await ctx.send("Привет! Я - Алиса! И я снова тут!")
     await bot.change_presence(status=discord.Status.online, activity = discord.Activity(type=discord.ActivityType.listening, name="Вас"))
 
-@bot.command(name='pause')
+@bot.command(name='pause', description="Заткнуть Алису на 5 минут")
 async def pause_bot(ctx):
     global is_paused
     is_paused = True
@@ -82,7 +84,7 @@ async def on_ready():
     print(f"Вы вошли как {bot.user}")
     await bot.change_presence(status=discord.Status.online, activity=discord.Activity(type=discord.ActivityType.listening, name="Вас"))
     await run_check_log_file()
-    
+    await meme()
 
 # Функция, которая будет вызываться при изменении статуса
 logging.basicConfig(filename='example.log', level=logging.INFO)
@@ -310,7 +312,43 @@ async def run_check_log_file():
         else:
             #print('Нет новых записей в файле')
             await asyncio.sleep(3)
-            
+
+reddit = praw.Reddit(client_id='lIwhm8aNKKH4BQ',
+                     client_secret='VrI0rAVzIeOuZVV_SYiR0jXZiA4',
+                     user_agent='bot-o-meme by TheWizzy1547')
+
+
+def get_memes_urls(limit=100):
+
+    req_subreddits = ["memes", "dankmemes",
+                      "terriblefacebookmemes"]  # subreddits
+    meme_list = []
+    for req_subreddit in req_subreddits:
+        subreddit = reddit.subreddit(req_subreddit)
+        for submission in subreddit.new(limit=(limit//len(req_subreddits)) + 1):
+            meme_list.append(
+                ["https://reddit.com" + submission.permalink, submission.title, submission.url])
+
+    random.shuffle(meme_list)  # to shuffle obtained posts
+    return meme_list
+
+# meme command
+@bot.command(name="meme", description="Посмотреть мемас")
+async def meme(message):
+    meme_list = get_memes_urls(1)
+    for meme_set in meme_list[:1]:
+        response_permalink = meme_set[0]
+        response_title = meme_set[1]
+        response_url = meme_set[2]
+        colors = [0xff0000, 0x00ff00, 0x0000ff, 0x000000,
+                  0xffffff, 0xffff00, 0x00ffff, 0xff00ff]
+        random.shuffle(colors)
+        emb = discord.Embed(title=response_title,
+                            url=response_permalink, color=colors[0])
+        emb.set_image(url=response_url)
+        await message.send(embed=emb)
+        
+
 @bot.event
 async def on_message(message):
     if message.author == bot.user or not message.content:
@@ -324,14 +362,11 @@ async def on_message(message):
 
     if "заткнись" in message.content.lower():
         await pause_bot(message.channel)
-        return
-
+        return    
 
     await bot.process_commands(message)
     if message.content.startswith('/'):
         return
-
-
 
     # Текстовая часть для обработки обычных сообщений
     print(f"Получено сообщение: {message.content}")
@@ -345,6 +380,12 @@ async def on_message(message):
         await message.channel.send(weather_report)
         print(f"Отправлено погодное уведомление: {weather_report}")
         return
+    
+    # Проверяем, содержится ли в сообщении слово 'мем'
+    if 'мем' in text:
+        command_ctx = await bot.get_context(message)
+        await command_ctx.invoke(bot.get_command('meme'))
+        return
 
     # Предполагаем, что функция process_message() существует и обрабатывает сообщение
     response = process_message(text)
@@ -355,11 +396,11 @@ async def on_message(message):
         print(f"Отправлен ответ: {response}")
 
 
+
 # В конце основной функции тоже добавлен вывод в консоль
 async def main():
     print("Запуск Алисы...")
-    await bot.start(config.TOKEN)  
-
+    await bot.start(config.TOKEN)    
 asyncio.run(main())
 
 
