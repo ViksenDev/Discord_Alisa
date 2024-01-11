@@ -118,6 +118,26 @@ async def ym(ctx):
     # Отключаемся от голосового канала
     await voice_client.disconnect()
     
+@bot.command()
+async def ym_off(ctx):
+    # Проверяем, что автор команды находится в голосовом канале
+    if ctx.author.voice is None:
+        await ctx.send('Вы должны находиться в голосовом канале, чтобы использовать эту команду.')
+        return
+    
+    # Проверяем, что бот находится в голосовом канале
+    voice_client = discord.utils.get(bot.voice_clients, guild=ctx.guild)
+    if voice_client is None:
+        await ctx.send('Бот не находится в голосовом канале.')
+        return
+    
+    # Останавливаем воспроизведение музыки
+    voice_client.stop()
+    
+    # Отключаемся от голосового канала
+    await voice_client.disconnect()
+
+    
 # Функция, которая будет вызываться при изменении статуса
 logging.basicConfig(filename='example.log', level=logging.INFO)
 
@@ -423,6 +443,12 @@ async def on_message(message):
     if 'музык' in text:
         command_ctx = await bot.get_context(message)
         await command_ctx.invoke(bot.get_command('ym'))
+        return
+    
+    # Проверяем, содержится ли в сообщении слово 'выключи музыку'
+    if 'выключи музыку' in text:
+        command_ctx = await bot.get_context(message)
+        await command_ctx.invoke(bot.get_command('ym_off'))
         return
 
     # Предполагаем, что функция process_message() существует и обрабатывает сообщение
