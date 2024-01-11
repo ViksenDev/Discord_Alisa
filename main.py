@@ -372,8 +372,7 @@ reddit = praw.Reddit(client_id='lIwhm8aNKKH4BQ',
 
 def get_memes_urls(limit=100):
 
-    req_subreddits = ["memes", "dankmemes",
-                      "terriblefacebookmemes"]  # subreddits
+    req_subreddits = ["memes", "dankmemes"]  # subreddits
     meme_list = []
     for req_subreddit in req_subreddits:
         subreddit = reddit.subreddit(req_subreddit)
