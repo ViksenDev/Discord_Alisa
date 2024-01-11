@@ -107,7 +107,7 @@ async def ym(ctx):
     # Присоединяемся к голосовому каналу автора команды
     voice_channel = ctx.author.voice.channel
     voice_client = await voice_channel.connect()
-        await ctx.send('Включаю музыку..')
+    await ctx.send('Включаю музыку..')
 
     # Воспроизводим поток музыки
     voice_client.play(discord.FFmpegPCMAudio(stream_url))
@@ -137,7 +137,7 @@ async def next(ctx):
     
     # Выбираем случайный поток музыки из другого плейлиста
     stream_url = random.choice(music_streams)
-        await ctx.send('Включаю другой плейлист')
+    await ctx.send('Включаю другой плейлист')
 
     # Воспроизводим поток музыки
     voice_client.play(discord.FFmpegPCMAudio(stream_url))
