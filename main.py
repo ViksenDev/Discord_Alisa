@@ -20,6 +20,14 @@ intents.members = True
 
 bot = commands.Bot(command_prefix='/', intents=intents)
 
+# Список URL-адресов потоков музыки
+music_streams = [
+    'https://nashe2.hostingradio.ru/ultra-128.mp3',
+    'http://nashe2.hostingradio.ru/rock-128.mp3',
+    'http://ep128.streamr.ru'
+    'http://listen1.myradio24.com:9000/5967'
+]
+
 is_paused = False
     
 @bot.command(name='start', description="Позвать Алису")
@@ -86,6 +94,30 @@ async def on_ready():
     await run_check_log_file()
     await meme()
 
+@bot.command()
+async def music(ctx):
+    # Проверяем, что автор команды находится в голосовом канале
+    if ctx.author.voice is None:
+        await ctx.send('Вы должны находиться в голосовом канале, чтобы использовать эту команду.')
+        return
+    
+    # Выбираем случайный поток музыки
+    stream_url = random.choice(music_streams)
+    
+    # Присоединяемся к голосовому каналу автора команды
+    voice_channel = ctx.author.voice.channel
+    voice_client = await voice_channel.connect()
+    
+    # Воспроизводим поток музыки
+    voice_client.play(discord.FFmpegPCMAudio(stream_url))
+    
+    # Ожидаем окончания потока музыки
+    while voice_client.is_playing():
+        await asyncio.sleep(1)
+    
+    # Отключаемся от голосового канала
+    await voice_client.disconnect()
+    
 # Функция, которая будет вызываться при изменении статуса
 logging.basicConfig(filename='example.log', level=logging.INFO)
 
