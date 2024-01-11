@@ -24,8 +24,12 @@ bot = commands.Bot(command_prefix='/', intents=intents)
 music_streams = [
     'https://nashe2.hostingradio.ru/ultra-128.mp3',
     'http://nashe2.hostingradio.ru/rock-128.mp3',
-    'http://ep128.streamr.ru'
-    'http://listen1.myradio24.com:9000/5967'
+    'http://ep128.streamr.ru',
+    'http://nashe.streamr.ru/nashe-128.mp3',
+    'http://nashe.streamr.ru/nashe20-128.mp3',
+    'http://stream6.radiostyle.ru:8006/nomercy'
+
+
 ]
 
 is_paused = False
