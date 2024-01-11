@@ -370,19 +370,15 @@ reddit = praw.Reddit(client_id='lIwhm8aNKKH4BQ',
                      user_agent='bot-o-meme by TheWizzy1547')
 
 
-used_memes = []
-
 def get_memes_urls(limit=100):
-    req_subreddits = ["memes", "dankmemes", "HistoryMemes", "Pikabu", "rusAskReddit"]  # subreddits
+
+    req_subreddits = ["memes", "dankmemes", "HistoryMemes", "Pikabu"]  # subreddits
     meme_list = []
     for req_subreddit in req_subreddits:
         subreddit = reddit.subreddit(req_subreddit)
         for submission in subreddit.new(limit=(limit//len(req_subreddits)) + 1):
-            if submission.url in used_memes:
-                continue
             meme_list.append(
                 ["https://reddit.com" + submission.permalink, submission.title, submission.url])
-            used_memes.append(submission.url)
 
     random.shuffle(meme_list)  # to shuffle obtained posts
     return meme_list
