@@ -24,10 +24,8 @@ bot = commands.Bot(command_prefix='/', intents=intents)
 music_streams = [
     'https://nashe2.hostingradio.ru/ultra-128.mp3',
     'http://nashe2.hostingradio.ru/rock-128.mp3',
-    'http://ep128.streamr.ru',
     'http://nashe.streamr.ru/nashe-128.mp3',
-    'http://nashe.streamr.ru/nashe20-128.mp3',
-    'http://stream6.radiostyle.ru:8006/nomercy'
+    'http://nashe.streamr.ru/nashe20-128.mp3'
 
 
 ]
@@ -113,6 +111,10 @@ async def ym(ctx):
     voice_client = await voice_channel.connect()
     await ctx.send('Включаю музыку..')
 
+    # Останавливаем воспроизведение, если уже играет аудио
+    if voice_client.is_playing():
+        voice_client.stop()
+
     # Воспроизводим поток музыки
     voice_client.play(discord.FFmpegPCMAudio(stream_url))
     
@@ -137,7 +139,8 @@ async def next(ctx):
         return
     
     # Останавливаем воспроизведение музыки
-    voice_client.stop()
+    if voice_client.is_playing():
+        voice_client.stop()
     
     # Выбираем случайный поток музыки из другого плейлиста
     stream_url = random.choice(music_streams)
@@ -152,7 +155,7 @@ async def next(ctx):
     
     # Отключаемся от голосового канала
     await voice_client.disconnect()
-    
+
 @bot.command()
 async def ym_off(ctx):
     # Проверяем, что автор команды находится в голосовом канале
@@ -167,10 +170,12 @@ async def ym_off(ctx):
         return
     
     # Останавливаем воспроизведение музыки
-    voice_client.stop()
+    if voice_client.is_playing():
+        voice_client.stop()
     
     # Отключаемся от голосового канала
     await voice_client.disconnect()
+
 
     
 # Функция, которая будет вызываться при изменении статуса
