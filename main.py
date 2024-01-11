@@ -6,8 +6,9 @@ import json
 from discord.ext import commands, tasks
 import config
 from conditions import condition_translations
-from datetime import datetime
+import datetime
 import logging
+import os
 
 intents = discord.Intents.default()
 intents.typing = True
@@ -80,24 +81,8 @@ def get_weather():
 async def on_ready():
     print(f"Вы вошли как {bot.user}")
     await bot.change_presence(status=discord.Status.online, activity=discord.Activity(type=discord.ActivityType.listening, name="Вас"))
-
-@bot.event
-async def on_message(message):
-    if message.content.endswith('?'):
-        channel = message.channel
-        guild = message.guild
-        author = message.author
-        messages = []
-
-        async for msg in channel.history(limit=10, before=message):
-            if msg.author != author:
-                messages.append({
-                    'question': message.content,
-                    'answer': msg.content
-                })
-
-        with open('new_qa.json', 'a') as file:
-            json.dump(messages, file)    
+    await run_check_log_file()
+    
 
 # Функция, которая будет вызываться при изменении статуса
 logging.basicConfig(filename='example.log', level=logging.INFO)
@@ -230,11 +215,102 @@ async def on_presence_update(before, after):
             if channel_in_category:
                 await channel_in_category.send(message)
 
-
-
-
-
+async def check_log_file():
+    # Путь к файлу LapLog.txt
+    file_path = r'\\VIKSEN-PC\Logs\LapLog.txt'
     
+    # Путь к файлу simhub.json
+    simhub_file_path = r'\\VIKSEN-PC\Logs\simhub.json'
+
+    def get_last_line_count(file_path):
+        if os.path.exists(file_path):
+            with open(file_path, 'r') as file:
+                data = json.load(file)
+                return data.get('last_line_count', 0)
+        else:
+            return 0
+
+    def update_last_line_count(file_path, count):
+        if os.path.exists(file_path):
+            with open(file_path, 'r') as file:
+                data = json.load(file)
+            
+            data['last_line_count'] = count
+            
+            with open(file_path, 'w') as file:
+                json.dump(data, file)
+        else:
+            with open(file_path, 'w') as file:
+                data = {'last_line_count': count}
+                json.dump(data, file)
+
+    # Проверяем существование файла
+    if os.path.exists(file_path):
+        with open(file_path, 'r') as file:
+            # Считываем содержимое файла
+            lines = file.read().splitlines()
+
+        # Проверяем наличие новых записей
+        if len(lines) > get_last_line_count(simhub_file_path):
+            # Обновляем количество строк
+            update_last_line_count(simhub_file_path, len(lines))
+
+            # Считываем только последнюю строку
+            last_line = lines[-1]
+
+            # Парсим значения параметров
+            if 'Laptime' in last_line:
+                lt = last_line.split('"Laptime":')[1].strip().strip('"')
+                formatted_lt = lt[3:12]  # Извлекаем только нужную часть времени
+                print(f'Lap time: {formatted_lt}')
+
+            if 'NewSimHubAllTimeBest' in last_line:
+                bt = last_line.split('"NewSimHubAllTimeBest":')[1].strip().strip('"')
+                formatted_bt = bt[3:12]  # Извлекаем только нужную часть времени
+                print(f'Best time: {formatted_bt}')
+
+            if 'LapMaxSpeed' in last_line:
+                ms = last_line.split('"LapMaxSpeed":')[1].strip().strip('"')
+                print(f'Max Speed: {ms[:3]} км/ч')
+
+            # Создаем embeds зеленого цвета
+
+            current_time = datetime.datetime.now().strftime("%d.%m.%Y в %H:%M:%S")
+            
+            embeds = [{
+                "title": "Завершение круга",
+                "description": f"- Время круга: {formatted_lt}\n- Лучший круг: {formatted_bt}\n- Максимальная скорость: {ms[:3]} км/ч\n- Текущее время: {current_time}",
+                "color": 65280  # Зеленый цвет в десятичном формате
+            }]
+
+            # Отправляем вебхук
+            payload = {
+                "content": f"",
+                "embeds": embeds,
+            }
+            webhook_url = "https://discord.com/api/webhooks/1191486176482316410/gv0NiNvzY2WrkXKkYIvNpNYKS5QNm77EAZs6_R5dw9AMRMyM0-0VZ_JUjDx6xr1xPB4D"
+            response = requests.post(webhook_url, json=payload)
+            if response.status_code == 204:
+                print("Webhook sent successfully")
+            else:
+                print("Failed to send webhook")
+
+        else:
+            return False
+    else:
+        return False
+
+    return True
+
+async def run_check_log_file():
+    while True:
+        new_line_added = await check_log_file()
+        if new_line_added:
+            await asyncio.sleep(10)
+        else:
+            #print('Нет новых записей в файле')
+            await asyncio.sleep(3)
+            
 @bot.event
 async def on_message(message):
     if message.author == bot.user or not message.content:
@@ -282,6 +358,11 @@ async def on_message(message):
 # В конце основной функции тоже добавлен вывод в консоль
 async def main():
     print("Запуск Алисы...")
-    await bot.start(config.TOKEN)
+    await bot.start(config.TOKEN)  
 
 asyncio.run(main())
+
+
+
+
+  
