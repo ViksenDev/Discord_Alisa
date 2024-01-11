@@ -445,8 +445,8 @@ async def on_message(message):
         await command_ctx.invoke(bot.get_command('ym'))
         return
     
-    # Проверяем, содержится ли в сообщении слово 'выключи музыку'
-    if 'выключи музыку' in text:
+    # Проверяем, содержится ли в сообщении слово 'выключ'
+    if 'выключ' in text:
         command_ctx = await bot.get_context(message)
         await command_ctx.invoke(bot.get_command('ym_off'))
         return
