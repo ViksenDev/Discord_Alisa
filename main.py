@@ -95,7 +95,7 @@ async def on_ready():
     await meme()
 
 @bot.command()
-async def music(ctx):
+async def ym(ctx):
     # Проверяем, что автор команды находится в голосовом канале
     if ctx.author.voice is None:
         await ctx.send('Вы должны находиться в голосовом канале, чтобы использовать эту команду.')
@@ -417,6 +417,12 @@ async def on_message(message):
     if 'мем' in text:
         command_ctx = await bot.get_context(message)
         await command_ctx.invoke(bot.get_command('meme'))
+        return
+    
+    # Проверяем, содержится ли в сообщении слово 'музык'
+    if 'музык' in text:
+        command_ctx = await bot.get_context(message)
+        await command_ctx.invoke(bot.get_command('ym'))
         return
 
     # Предполагаем, что функция process_message() существует и обрабатывает сообщение
