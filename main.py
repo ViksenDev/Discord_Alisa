@@ -105,7 +105,7 @@ def yandex_music_finished(error):
     else:
         print('Предварительная мелодия alisa.mp3 была успешно воспроизведена.')
 
-@bot.command()
+@bot.command(name='play')
 async def play(ctx):
     remove_non_working_playlists()
     
@@ -137,7 +137,7 @@ async def play(ctx):
     ctx.voice_client.play(discord.FFmpegPCMAudio('alisa.mp3'), after=after_playing_yandex_music)
     #await ctx.send('Воспроизвожу начальную мелодию...')
 
-@bot.command()
+@bot.command(name='next')
 async def next(ctx):
     remove_non_working_playlists()
 
@@ -157,7 +157,7 @@ async def next(ctx):
         await ctx.send('Алиса не находится в голосовом канале.')
 
 
-@bot.command()
+@bot.command(name='leave')
 async def leave(ctx):
     if ctx.voice_client is not None:
         await ctx.voice_client.disconnect()
@@ -460,7 +460,7 @@ async def on_message(message):
             await message.channel.send('Не удалось загрузить мем.')
  
             
-    if message.content.lower().startswith('мем'):
+    if 'мем' in message.content.lower():
         # Отправляем GET-запрос на страницу для получения случайного мема
         response = requests.get('https://img.randme.me/')
         if response.status_code == 200:
@@ -475,6 +475,7 @@ async def on_message(message):
             await message.channel.send(file=discord_file)
         else:
             await message.channel.send('Не удалось загрузить мем.')
+
             
     if random.random() < 0.3:  # Шанс 30% для реакции на сообщение
         reactions = ['😄', '👍', '❤️', '🎉', '😂', '😮', '😢', '👎', '🔥', '🤔', '💯', '🙌']  # Расширенный список доступных реакций
