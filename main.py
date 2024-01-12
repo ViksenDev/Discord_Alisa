@@ -445,7 +445,7 @@ async def on_message(message):
             await message.channel.send('Не удалось загрузить мем.')
  
             
-    if message.content.startswith('мем'):
+    if message.content.lower().startswith('мем'):
         # Отправляем GET-запрос на страницу для получения случайного мема
         response = requests.get('https://img.randme.me/')
         if response.status_code == 200:
@@ -460,6 +460,7 @@ async def on_message(message):
             await message.channel.send(file=discord_file)
         else:
             await message.channel.send('Не удалось загрузить мем.')
+
     
     if message.content.startswith('/'):
         return
