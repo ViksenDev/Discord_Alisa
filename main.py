@@ -98,6 +98,8 @@ async def on_ready():
 
 @bot.command()
 async def ym(ctx):
+    remove_non_working_playlists()
+    
     # Проверяем, что автор команды находится в голосовом канале
     if ctx.author.voice is None:
         await ctx.send('Вы должны находиться в голосовом канале, чтобы использовать эту команду.')
@@ -156,6 +158,7 @@ async def next(ctx):
     # Отключаемся от голосового канала
     await voice_client.disconnect()
 
+
 @bot.command()
 async def ym_off(ctx):
     # Проверяем, что автор команды находится в голосовом канале
@@ -175,6 +178,27 @@ async def ym_off(ctx):
     
     # Отключаемся от голосового канала
     await voice_client.disconnect()
+
+@bot.command()
+async def add_pl(ctx, playlist_url):
+    music_streams.append(playlist_url)
+    await ctx.send(f'Плейлист {playlist_url} добавлен.')
+
+def remove_non_working_playlists():
+    global music_streams
+    working_streams = []
+    for stream_url in music_streams:
+        # Проверяем, доступен ли поток музыки
+        if is_music_stream_available(stream_url):
+            working_streams.append(stream_url)
+    music_streams = working_streams
+
+def is_music_stream_available(stream_url):
+    try:
+        response = requests.head(stream_url)
+        return response.status_code == 200
+    except requests.exceptions.RequestException:
+        return False
 
 
     
