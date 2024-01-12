@@ -238,19 +238,26 @@ async def on_presence_update(before, after):
             if channel_in_category:
                 await channel_in_category.send(message)
         elif after_activity == 'Warframe':
-            message = f'{member_mention}, выфармим нового фрейма в {after_activity}?'
+            message = f'{member_mention}, скрытое сообщение в {after_activity}?'
             print(message)  # Дублирование сообщения в консоль
             #if channel_without_category:
                 #await channel_without_category.send(message)
             #if channel_in_category:
                # await channel_in_category.send(message)
         elif 'Skyforge' in after_activity:
-            message = f'{member_mention}, выфармим нового фрейма в {after_activity}?'
+            message = f'{member_mention}, скрытое сообщение в {after_activity}?'
             print(message)  # Дублирование сообщения в консоль
             #if channel_without_category:
               #  await channel_without_category.send(message)
             #if channel_in_category:
-               # await channel_in_category.send(message)            
+               # await channel_in_category.send(message)  
+        elif 'The End Is Coming' in after_activity:
+            message = f'{member_mention}, скрытое сообщение в {after_activity}?'
+            print(message)  # Дублирование сообщения в консоль
+            #if channel_without_category:
+              #  await channel_without_category.send(message)
+            #if channel_in_category:
+               # await channel_in_category.send(message)          
         elif 'Lineage' in after_activity:
             message = f'{member_mention}, уже купил пуху дракона в {after_activity}?'
             print(message)  # Дублирование сообщения в консоль
