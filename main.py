@@ -475,6 +475,13 @@ async def on_message(message):
             await message.channel.send(file=discord_file)
         else:
             await message.channel.send('Не удалось загрузить мем.')
+            
+    if random.random() < 0.3:  # Шанс 30% для реакции на сообщение
+        reactions = ['😄', '👍', '❤️', '🎉', '😂', '😮', '😢', '👎', '🔥', '🤔', '💯', '🙌']  # Расширенный список доступных реакций
+        reaction = random.choice(reactions)
+        await message.add_reaction(reaction)
+
+    await bot.process_commands(message)
 
     
     if message.content.startswith('/'):
