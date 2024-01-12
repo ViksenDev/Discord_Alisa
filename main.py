@@ -30,6 +30,9 @@ is_paused = False
     
 @bot.command(name='start', description="Позвать Алису")
 async def start_command(ctx):
+        """
+    Позвать Алису
+    """
     global is_paused
     is_paused = False  # сбрасываем флаг паузы
     await ctx.send("Привет! Я - Алиса! И я снова тут!")
@@ -42,7 +45,9 @@ async def pause_bot(ctx):
     await ctx.send("Всё, поняла, молчу.")
     await bot.change_presence(status=discord.Status.idle, activity = discord.Activity(type=discord.ActivityType.listening, name="только себя"))
     await asyncio.sleep(300)
-       
+ 
+    
+
 # Загрузка вопросов и ответов из qa.json
 def load_qa():
     try:
