@@ -99,6 +99,12 @@ def save_music_streams():
         for stream in music_streams:
             file.write(stream + '\n')
 
+def yandex_music_finished(error):
+    if error:
+        print(f'Произошла ошибка: {error}')
+    else:
+        print('Предварительная мелодия alisa.mp3 была успешно воспроизведена.')
+
 @bot.command()
 async def play(ctx):
     remove_non_working_playlists()
@@ -113,14 +119,23 @@ async def play(ctx):
 
     stream_url = random.choice(music_streams)
     
+    channel = ctx.author.voice.channel
     if ctx.voice_client is None:
-        channel = ctx.author.voice.channel
         await channel.connect()
     elif ctx.voice_client.is_playing():
         ctx.voice_client.stop()
 
-    ctx.voice_client.play(discord.FFmpegPCMAudio(stream_url))
-    await ctx.send(f'Включаю музыку..')
+    # Функция для проигрывания плейлиста после yandex_music.mp3
+    def after_playing_yandex_music(error):
+        if not error:
+            ctx.voice_client.play(discord.FFmpegPCMAudio(stream_url), after=yandex_music_finished)
+            asyncio.run_coroutine_threadsafe(ctx.send(f'Включаю музыку..'), bot.loop)
+        else:
+            print(f'Произошла ошибка при воспроизведении yandex_music: {error}')
+
+    # Воспроизведение yandex_music.mp3 перед плейлистом
+    ctx.voice_client.play(discord.FFmpegPCMAudio('alisa.mp3'), after=after_playing_yandex_music)
+    #await ctx.send('Воспроизвожу начальную мелодию...')
 
 @bot.command()
 async def next(ctx):
