@@ -20,15 +20,8 @@ intents.members = True
 
 bot = commands.Bot(command_prefix='/', intents=intents)
 
-# Список URL-адресов потоков музыки
-music_streams = [
-    'https://nashe2.hostingradio.ru/ultra-128.mp3',
-    'http://nashe2.hostingradio.ru/rock-128.mp3',
-    'http://nashe.streamr.ru/nashe-128.mp3',
-    'http://nashe.streamr.ru/nashe20-128.mp3'
 
-
-]
+        
 
 is_paused = False
     
@@ -96,109 +89,88 @@ async def on_ready():
     await run_check_log_file()
     await meme()
 
+music_streams = []
+
+def save_music_streams():
+    with open('playlists.txt', 'w') as file:
+        for stream in music_streams:
+            file.write(stream + '\n')
+
 @bot.command()
-async def ym(ctx):
+async def play(ctx):
     remove_non_working_playlists()
     
-    # Проверяем, что автор команды находится в голосовом канале
     if ctx.author.voice is None:
-        await ctx.send('Вы должны находиться в голосовом канале, чтобы использовать эту команду.')
+        await ctx.send('Вы должны находиться в голосовом канале.')
         return
-    
-    # Выбираем случайный поток музыки
+
+    if not music_streams:
+        await ctx.send('Нет доступных плейлистов.')
+        return
+
     stream_url = random.choice(music_streams)
     
-    # Присоединяемся к голосовому каналу автора команды
-    voice_channel = ctx.author.voice.channel
-    voice_client = await voice_channel.connect()
-    await ctx.send('Включаю музыку..')
+    if ctx.voice_client is None:
+        channel = ctx.author.voice.channel
+        await channel.connect()
+    elif ctx.voice_client.is_playing():
+        ctx.voice_client.stop()
 
-    # Останавливаем воспроизведение, если уже играет аудио
-    if voice_client.is_playing():
-        voice_client.stop()
-
-    # Воспроизводим поток музыки
-    voice_client.play(discord.FFmpegPCMAudio(stream_url))
-    
-    # Ожидаем окончания потока музыки
-    while voice_client.is_playing():
-        await asyncio.sleep(1)
-    
-    # Отключаемся от голосового канала
-    await voice_client.disconnect()
+    ctx.voice_client.play(discord.FFmpegPCMAudio(stream_url))
+    await ctx.send(f'Включаю музыку..')
 
 @bot.command()
 async def next(ctx):
-    # Проверяем, что автор команды находится в голосовом канале
-    if ctx.author.voice is None:
-        await ctx.send('Вы должны находиться в голосовом канале, чтобы использовать эту команду.')
-        return
-    
-    # Проверяем, что бот находится в голосовом канале
-    voice_client = discord.utils.get(bot.voice_clients, guild=ctx.guild)
-    if voice_client is None:
-        await ctx.send('Бот не находится в голосовом канале.')
-        return
-    
-    # Останавливаем воспроизведение музыки
-    if voice_client.is_playing():
-        voice_client.stop()
-    
-    # Выбираем случайный поток музыки из другого плейлиста
-    stream_url = random.choice(music_streams)
-    await ctx.send('Включаю другой плейлист')
+    remove_non_working_playlists()
 
-    # Воспроизводим поток музыки
-    voice_client.play(discord.FFmpegPCMAudio(stream_url))
-    
-    # Ожидаем окончания потока музыки
-    while voice_client.is_playing():
-        await asyncio.sleep(1)
-    
-    # Отключаемся от голосового канала
-    await voice_client.disconnect()
+    if ctx.voice_client is not None:
+        if len(music_streams) == 0:
+            await ctx.send('Нет других плейлистов.')
+            return
+
+        if ctx.voice_client.is_playing():
+            ctx.voice_client.stop()
+
+        next_stream_url = random.choice(music_streams)
+
+        ctx.voice_client.play(discord.FFmpegPCMAudio(next_stream_url), after=lambda e: print(f'Finished playing: {next_stream_url}.'))
+        await ctx.send(f'Включаю следующий плейлист..')
+    else:
+        await ctx.send('Алиса не находится в голосовом канале.')
 
 
 @bot.command()
-async def ym_off(ctx):
-    # Проверяем, что автор команды находится в голосовом канале
-    if ctx.author.voice is None:
-        await ctx.send('Вы должны находиться в голосовом канале, чтобы использовать эту команду.')
-        return
-    
-    # Проверяем, что бот находится в голосовом канале
-    voice_client = discord.utils.get(bot.voice_clients, guild=ctx.guild)
-    if voice_client is None:
-        await ctx.send('Бот не находится в голосовом канале.')
-        return
-    
-    # Останавливаем воспроизведение музыки
-    if voice_client.is_playing():
-        voice_client.stop()
-    
-    # Отключаемся от голосового канала
-    await voice_client.disconnect()
+async def leave(ctx):
+    if ctx.voice_client is not None:
+        await ctx.voice_client.disconnect()
+        await ctx.send('Выключаю музыку..')
+    else:
+        await ctx.send('Алиса не находится в голосовом канале.')
 
 @bot.command()
-async def add_pl(ctx, playlist_url):
-    music_streams.append(playlist_url)
-    await ctx.send(f'Плейлист {playlist_url} добавлен.')
+async def add_pl(ctx, stream_url):
+    music_streams.append(stream_url)
+    save_music_streams()
+    await ctx.send(f'Добавлен плейлист: {stream_url}')
 
 def remove_non_working_playlists():
     global music_streams
-    working_streams = []
-    for stream_url in music_streams:
-        # Проверяем, доступен ли поток музыки
-        if is_music_stream_available(stream_url):
-            working_streams.append(stream_url)
-    music_streams = working_streams
+    music_streams = [stream for stream in music_streams if is_music_stream_available(stream)]
+    save_music_streams()
 
 def is_music_stream_available(stream_url):
     try:
-        response = requests.head(stream_url)
+        response = requests.head(stream_url, timeout=5)
         return response.status_code == 200
     except requests.exceptions.RequestException:
         return False
+
+def load_music_streams():
+    with open('playlists.txt', 'r') as file:
+        return [line.strip() for line in file if line.strip()]
+
+music_streams = load_music_streams()
+
 
 
     
@@ -506,13 +478,13 @@ async def on_message(message):
     # Проверяем, содержится ли в сообщении слово 'музык'
     if 'музык' in text:
         command_ctx = await bot.get_context(message)
-        await command_ctx.invoke(bot.get_command('ym'))
+        await command_ctx.invoke(bot.get_command('play'))
         return
     
     # Проверяем, содержится ли в сообщении слово 'выключ'
     if 'выключ' in text:
         command_ctx = await bot.get_context(message)
-        await command_ctx.invoke(bot.get_command('ym_off'))
+        await command_ctx.invoke(bot.get_command('leave'))
         return
     
     # Проверяем, содержится ли в сообщении слово 'некст'
