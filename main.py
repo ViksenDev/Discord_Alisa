@@ -30,9 +30,6 @@ is_paused = False
     
 @bot.command(name='start', description="Позвать Алису")
 async def start_command(ctx):
-        """
-    Позвать Алису
-    """
     global is_paused
     is_paused = False  # сбрасываем флаг паузы
     await ctx.send("Привет! Я - Алиса! И я снова тут!")
