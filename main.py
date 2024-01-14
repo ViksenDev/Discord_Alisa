@@ -75,14 +75,12 @@ def get_weather():
     data = response.json()
 
     condition = data["current"]["condition"]["text"]
-
-
     condition_translation = condition_translations.get(condition, condition)
     temperature = data["current"]["temp_c"]
-    wind =  data["current"]["wind_mph"]
-    wind2 = data["current"]["wind_degree"]
-    gust = data["current"]["gust_mph"]
-    vis = data["current"]["vis_km"]
+    wind_speed = data["current"]["wind_mph"] * 0.44704  # Перевести мили/ч в метры/с
+    wind_direction = data["current"]["wind_degree"]
+    gust_speed = data["current"]["gust_mph"] * 0.44704  # Перевести мили/ч в метры/с
+    visibility = data["current"]["vis_km"]
 
     return f"## **   Сейчас в Москве:** \n* {condition_translation}\n- Температура: {temperature}°C\n- Ветер {wind2}°, {wind} м/с,\n- Порывы {gust} м/с \n- Видимость {vis} км "
 
@@ -93,6 +91,10 @@ async def on_ready():
     await bot.change_presence(status=discord.Status.online, activity=discord.Activity(type=discord.ActivityType.listening, name="Вас"))
     await run_check_log_file()
     await meme()
+    weather = get_weather()
+    # Установка статуса активности бота
+    await client.change_presence(activity=discord.Game(name=weather))    
+
 
 music_streams = []
 
