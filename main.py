@@ -10,10 +10,10 @@ import datetime
 import logging
 import os
 import urllib.request
-import praw
 from bs4 import BeautifulSoup
 from discord import File
 from io import BytesIO
+from discord.ui import Button, View
 
 intents = discord.Intents.default()
 intents.typing = True
@@ -107,6 +107,22 @@ def yandex_music_finished(error):
     else:
         print('Предварительная мелодия alisa.mp3 была успешно воспроизведена.')
 
+
+# Создание View, включающее кнопки "Следующий плейлист" и "Остановить"
+class MusicControls(View):
+    def __init__(self):
+        super().__init__(timeout=None)  # Указываем timeout=None для постоянной активности кнопок
+
+    @discord.ui.button(label="Следующий плейлист", style=discord.ButtonStyle.green)
+    async def next_playlist(self, button: discord.ui.Button, interaction: discord.Interaction):
+        ctx = await bot.get_context(interaction.message)
+        await next(ctx)  # Предполагаем, что функция 'next' правильно обрабатывает объект 'ctx'
+
+    @discord.ui.button(label="Остановить", style=discord.ButtonStyle.red)
+    async def stop_music(self, button: discord.ui.Button, interaction: discord.Interaction):
+        ctx = await bot.get_context(interaction.message)
+        await leave(ctx)  # Предполагаем, что функция 'leave' правильно обрабатывает объект 'ctx'
+        
 @bot.command(name='play')
 async def play(ctx):
     remove_non_working_playlists()
@@ -131,14 +147,14 @@ async def play(ctx):
     def after_playing_yandex_music(error):
         if not error:
             ctx.voice_client.play(discord.FFmpegPCMAudio(stream_url), after=yandex_music_finished)
-            asyncio.run_coroutine_threadsafe(ctx.send(f'Включаю музыку..'), bot.loop)
+            asyncio.run_coroutine_threadsafe(ctx.send(f'Включаю музыку..', view=music_controls), bot.loop)
         else:
             print(f'Произошла ошибка при воспроизведении yandex_music: {error}')
 
     # Воспроизведение yandex_music.mp3 перед плейлистом
     ctx.voice_client.play(discord.FFmpegPCMAudio('alisa.mp3'), after=after_playing_yandex_music)
     #await ctx.send('Воспроизвожу начальную мелодию...')
-
+    
 @bot.command(name='next')
 async def next(ctx):
     remove_non_working_playlists()
@@ -154,10 +170,10 @@ async def next(ctx):
         next_stream_url = random.choice(music_streams)
 
         ctx.voice_client.play(discord.FFmpegPCMAudio(next_stream_url), after=lambda e: print(f'Finished playing: {next_stream_url}.'))
-        await ctx.send(f'Включаю следующий плейлист..')
+        music_controls = MusicControls()
+        await ctx.send(f'Включаю следующий плейлист..', view=music_controls)
     else:
         await ctx.send('Алиса не находится в голосовом канале.')
-
 
 @bot.command(name='leave')
 async def leave(ctx):
