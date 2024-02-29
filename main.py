@@ -15,102 +15,6 @@ from discord import File
 from io import BytesIO
 from discord.ui import Button, View
 from discord.ext.commands import Cog
-from voice_channel_status import VoiceChannelStatus
-
-class MyBot(commands.Bot):
-    def __init__(self):
-        super().__init__(command_prefix='/', intents=discord.Intents.default())
-        self.add_cog(VoiceChannelStatus(self))
-
-
-class Logging(commands.Cog):
-    def __init__(self, bot):
-        self.bot = bot
-
-    @commands.Cog.listener()
-    async def on_message(self, message):
-        if message.author.bot:
-            return
-
-        log_channel = self.bot.get_channel(1212679526270631976)  # ID канала для логирования
-        embed = discord.Embed(title="Сообщение отправлено", color=0x00FF00)
-        embed.add_field(name="Автор", value=message.author.name, inline=True)
-        embed.add_field(name="Канал", value=message.channel.name, inline=True)
-        embed.add_field(name="Содержание", value=message.content, inline=False)
-        await log_channel.send(embed=embed)
-
-    @commands.Cog.listener()
-    async def on_member_join(self, member):
-        log_channel = self.bot.get_channel(1212679526270631976)  # ID канала для логирования
-        embed = discord.Embed(title="Пользователь присоединился", color=0x00FF00)
-        embed.add_field(name="Имя пользователя", value=member.name, inline=True)
-        embed.add_field(name="ID пользователя", value=member.id, inline=True)
-        await log_channel.send(embed=embed)
-
-    @commands.Cog.listener()
-    async def on_member_remove(self, member):
-        log_channel = self.bot.get_channel(1212679526270631976)  # ID канала для логирования
-        embed = discord.Embed(title="Пользователь покинул сервер", color=0x00FF00)
-        embed.add_field(name="Имя пользователя", value=member.name, inline=True)
-        embed.add_field(name="ID пользователя", value=member.id, inline=True)
-        await log_channel.send(embed=embed)
-
-    @commands.Cog.listener()
-    async def on_command(self, ctx):
-        log_channel = self.bot.get_channel(1212679526270631976)  # ID канала для логирования
-        embed = discord.Embed(title="Команда выполнена", color=0x00FF00)
-        embed.add_field(name="Автор", value=ctx.author.name, inline=True)
-        embed.add_field(name="Команда", value=ctx.command.name, inline=True)
-        await log_channel.send(embed=embed)
-
-    @commands.Cog.listener()
-    async def on_reaction_add(self, reaction, user):
-        log_channel = self.bot.get_channel(1212679526270631976)  # ID канала для логирования
-        embed = discord.Embed(title="Реакция добавлена", color=0x00FF00)
-        embed.add_field(name="Пользователь", value=user.name, inline=True)
-        embed.add_field(name="Реакция", value=reaction.emoji, inline=True)
-        embed.add_field(name="Сообщение", value=reaction.message.content, inline=False)
-        await log_channel.send(embed=embed)
-
-    @commands.Cog.listener()
-    async def on_reaction_remove(self, reaction, user):
-        log_channel = self.bot.get_channel(1212679526270631976)  # ID канала для логирования
-        embed = discord.Embed(title="Реакция удалена", color=0x00FF00)
-        embed.add_field(name="Пользователь", value=user.name, inline=True)
-        embed.add_field(name="Реакция", value=reaction.emoji, inline=True)
-        embed.add_field(name="Сообщение", value=reaction.message.content, inline=False)
-        await log_channel.send(embed=embed)
-
-    @commands.Cog.listener()
-    async def on_voice_state_update(self, member, before, after):
-        log_channel = self.bot.get_channel(1212679526270631976)  # ID канала для логирования
-        if before.channel is None and after.channel is not None:
-            embed = discord.Embed(title="Пользователь присоединился к голосовому каналу", color=0x00FF00)
-            embed.add_field(name="Пользователь", value=member.name, inline=True)
-            embed.add_field(name="Канал", value=after.channel.name, inline=True)
-        elif before.channel is not None and after.channel is None:
-            embed = discord.Embed(title="Пользователь покинул голосовой канал", color=0x00FF00)
-            embed.add_field(name="Пользователь", value=member.name, inline=True)
-            embed.add_field(name="Канал", value=before.channel.name, inline=True)
-        elif before.channel != after.channel:
-            embed = discord.Embed(title="Пользователь переключился между голосовыми каналами", color=0x00FF00)
-            embed.add_field(name="Пользователь", value=member.name, inline=True)
-            embed.add_field(name="Предыдущий канал", value=before.channel.name, inline=True)
-            embed.add_field(name="Новый канал", value=after.channel.name, inline=True)
-        await log_channel.send(embed=embed)
-
-    @commands.Cog.listener()
-    async def on_member_update(self, before, after):
-        log_channel = self.bot.get_channel(1212679526270631976)  # ID канала для логирования
-        if before.status != after.status:
-            embed = discord.Embed(title="Статус пользователя изменен", color=0x00FF00)
-            embed.add_field(name="Пользователь", value=after.name, inline=True)
-            embed.add_field(name="Предыдущий статус", value=before.status, inline=True)
-            embed.add_field(name="Новый статус", value=after.status, inline=True)
-            await log_channel.send(embed=embed)
-
-def setup(bot):
-    bot.add_cog(Logging(bot))
 
     
 class LevelingSystem(commands.Cog):
@@ -291,6 +195,28 @@ class MusicControls(View):
     async def stop_music(self, button: discord.ui.Button, interaction: discord.Interaction):
         ctx = await bot.get_context(interaction.message)
         await leave(ctx)  # Предполагаем, что функция 'leave' правильно обрабатывает объект 'ctx'
+
+
+@bot.event
+async def on_voice_state_update(member, before, after):
+    if after.channel:  # если пользователь присоединился к голосовому каналу
+        voice_channel = after.channel
+        if bot.user in voice_channel.members:  # если бот уже в голосовом канале
+            return
+        voice_client = await voice_channel.connect()  # присоединение к голосовому каналу
+
+        with open("playlists.txt", "r") as file:
+            playlists = file.read().splitlines()
+        
+        random_playlist = random.choice(playlists)
+        source = discord.FFmpegPCMAudio(random_playlist)  # указание пути к случайному плейлисту
+        voice_client.play(source)  # воспроизведение музыки
+
+    else:  # если никого нет в голосовом канале
+        voice_client = discord.utils.get(bot.voice_clients, guild=member.guild)
+        if voice_client:
+            await voice_client.disconnect()  # отключение от голосового канала.
+
         
 @bot.command(name='pl')
 async def play(ctx):
