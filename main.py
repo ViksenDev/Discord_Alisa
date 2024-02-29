@@ -14,6 +14,171 @@ from bs4 import BeautifulSoup
 from discord import File
 from io import BytesIO
 from discord.ui import Button, View
+from discord.ext.commands import Cog
+from voice_channel_status import VoiceChannelStatus
+
+class MyBot(commands.Bot):
+    def __init__(self):
+        super().__init__(command_prefix='/', intents=discord.Intents.default())
+        self.add_cog(VoiceChannelStatus(self))
+
+
+class Logging(commands.Cog):
+    def __init__(self, bot):
+        self.bot = bot
+
+    @commands.Cog.listener()
+    async def on_message(self, message):
+        if message.author.bot:
+            return
+
+        log_channel = self.bot.get_channel(1212679526270631976)  # ID канала для логирования
+        embed = discord.Embed(title="Сообщение отправлено", color=0x00FF00)
+        embed.add_field(name="Автор", value=message.author.name, inline=True)
+        embed.add_field(name="Канал", value=message.channel.name, inline=True)
+        embed.add_field(name="Содержание", value=message.content, inline=False)
+        await log_channel.send(embed=embed)
+
+    @commands.Cog.listener()
+    async def on_member_join(self, member):
+        log_channel = self.bot.get_channel(1212679526270631976)  # ID канала для логирования
+        embed = discord.Embed(title="Пользователь присоединился", color=0x00FF00)
+        embed.add_field(name="Имя пользователя", value=member.name, inline=True)
+        embed.add_field(name="ID пользователя", value=member.id, inline=True)
+        await log_channel.send(embed=embed)
+
+    @commands.Cog.listener()
+    async def on_member_remove(self, member):
+        log_channel = self.bot.get_channel(1212679526270631976)  # ID канала для логирования
+        embed = discord.Embed(title="Пользователь покинул сервер", color=0x00FF00)
+        embed.add_field(name="Имя пользователя", value=member.name, inline=True)
+        embed.add_field(name="ID пользователя", value=member.id, inline=True)
+        await log_channel.send(embed=embed)
+
+    @commands.Cog.listener()
+    async def on_command(self, ctx):
+        log_channel = self.bot.get_channel(1212679526270631976)  # ID канала для логирования
+        embed = discord.Embed(title="Команда выполнена", color=0x00FF00)
+        embed.add_field(name="Автор", value=ctx.author.name, inline=True)
+        embed.add_field(name="Команда", value=ctx.command.name, inline=True)
+        await log_channel.send(embed=embed)
+
+    @commands.Cog.listener()
+    async def on_reaction_add(self, reaction, user):
+        log_channel = self.bot.get_channel(1212679526270631976)  # ID канала для логирования
+        embed = discord.Embed(title="Реакция добавлена", color=0x00FF00)
+        embed.add_field(name="Пользователь", value=user.name, inline=True)
+        embed.add_field(name="Реакция", value=reaction.emoji, inline=True)
+        embed.add_field(name="Сообщение", value=reaction.message.content, inline=False)
+        await log_channel.send(embed=embed)
+
+    @commands.Cog.listener()
+    async def on_reaction_remove(self, reaction, user):
+        log_channel = self.bot.get_channel(1212679526270631976)  # ID канала для логирования
+        embed = discord.Embed(title="Реакция удалена", color=0x00FF00)
+        embed.add_field(name="Пользователь", value=user.name, inline=True)
+        embed.add_field(name="Реакция", value=reaction.emoji, inline=True)
+        embed.add_field(name="Сообщение", value=reaction.message.content, inline=False)
+        await log_channel.send(embed=embed)
+
+    @commands.Cog.listener()
+    async def on_voice_state_update(self, member, before, after):
+        log_channel = self.bot.get_channel(1212679526270631976)  # ID канала для логирования
+        if before.channel is None and after.channel is not None:
+            embed = discord.Embed(title="Пользователь присоединился к голосовому каналу", color=0x00FF00)
+            embed.add_field(name="Пользователь", value=member.name, inline=True)
+            embed.add_field(name="Канал", value=after.channel.name, inline=True)
+        elif before.channel is not None and after.channel is None:
+            embed = discord.Embed(title="Пользователь покинул голосовой канал", color=0x00FF00)
+            embed.add_field(name="Пользователь", value=member.name, inline=True)
+            embed.add_field(name="Канал", value=before.channel.name, inline=True)
+        elif before.channel != after.channel:
+            embed = discord.Embed(title="Пользователь переключился между голосовыми каналами", color=0x00FF00)
+            embed.add_field(name="Пользователь", value=member.name, inline=True)
+            embed.add_field(name="Предыдущий канал", value=before.channel.name, inline=True)
+            embed.add_field(name="Новый канал", value=after.channel.name, inline=True)
+        await log_channel.send(embed=embed)
+
+    @commands.Cog.listener()
+    async def on_member_update(self, before, after):
+        log_channel = self.bot.get_channel(1212679526270631976)  # ID канала для логирования
+        if before.status != after.status:
+            embed = discord.Embed(title="Статус пользователя изменен", color=0x00FF00)
+            embed.add_field(name="Пользователь", value=after.name, inline=True)
+            embed.add_field(name="Предыдущий статус", value=before.status, inline=True)
+            embed.add_field(name="Новый статус", value=after.status, inline=True)
+            await log_channel.send(embed=embed)
+
+def setup(bot):
+    bot.add_cog(Logging(bot))
+
+    
+class LevelingSystem(commands.Cog):
+    def __init__(self, bot):
+        self.bot = bot
+        self.xp_per_message = 10
+        self.xp_per_voice_minute = 5
+        self.levels = self.load_levels()
+        self.voice_start = {}
+
+    def load_levels(self):
+        try:
+            with open("lvl.json", "r") as f:
+                levels = json.load(f)
+        except FileNotFoundError:
+            levels = {}
+        return levels
+
+    def save_levels(self):
+        with open("lvl.json", "w") as f:
+            json.dump(self.levels, f)
+
+    @commands.Cog.listener()
+    async def on_message(self, message):
+        if not message.author.bot:
+            if message.author.id not in self.levels:
+                self.levels[message.author.id] = 0
+            self.levels[message.author.id] += self.xp_per_message
+
+    @commands.Cog.listener()
+    async def on_voice_state_update(self, member, before, after):
+        if not member.bot:
+            if before.channel is None and after.channel is not None:
+                self.voice_start[member.id] = time.time()
+            elif before.channel is not None and after.channel is None:
+                if member.id in self.voice_start:
+                    xp = self.xp_per_voice_minute * (time.time() - self.voice_start[member.id]) / 60
+                    if member.id not in self.levels:
+                        self.levels[member.id] = 0
+                    self.levels[member.id] += xp
+                    del self.voice_start[member.id]
+
+    async def get_level(self, member):
+        if member.id not in self.levels:
+            return 1
+        level = 0
+        xp = self.levels[member.id]
+        while xp >= 100 * (level + 1) ** 2:
+            level += 1
+        return level
+
+    @commands.Cog.listener()
+    async def on_xp_gain(self, member, xp, level_up):
+        if level_up:
+            channel = self.bot.get_channel(1195010662162759790)  # Replace 1234567890 with the ID of the level-up announcement channel
+            await channel.send(f"Congratulations {member.mention} on leveling up to level {level_up}!")
+
+            # Send a private message to the user
+            await member.send(f"Congratulations on leveling up to level {level_up}!")
+
+    @commands.Cog.listener()
+    async def on_ready(self):
+        self.save_levels()
+
+def setup(bot):
+    bot.add_cog(LevelingSystem(bot))
+
+
 
 intents = discord.Intents.default()
 intents.typing = True
@@ -24,24 +189,28 @@ intents.members = True
 bot = commands.Bot(command_prefix='/', intents=intents)
 
 
-        
+
 
 is_paused = False
     
-@bot.command(name='start', description="Позвать Алису")
+@bot.command(name='st', description="Позвать Алису", brief="Позвать Алису")
 async def start_command(ctx):
+    """Позвать Алису"""
     global is_paused
     is_paused = False  # сбрасываем флаг паузы
     await ctx.send("Привет! Я - Алиса! И я снова тут!")
-    await bot.change_presence(status=discord.Status.online, activity = discord.Activity(type=discord.ActivityType.listening, name="Вас"))
+    await bot.change_presence(status=discord.Status.online, activity=discord.Activity(type=discord.ActivityType.listening, name="Вас"))
 
-@bot.command(name='pause', description="Заткнуть Алису на 5 минут")
+@bot.command(name='sh', description="Заткнуть Алису на 5 минут", brief="Заткнуть Алису на 5 минут")
 async def pause_bot(ctx):
+    """Заткнуть Алису на 5 минут"""
     global is_paused
     is_paused = True
     await ctx.send("Всё, поняла, молчу.")
-    await bot.change_presence(status=discord.Status.idle, activity = discord.Activity(type=discord.ActivityType.listening, name="только себя"))
+    await bot.change_presence(status=discord.Status.idle, activity=discord.Activity(type=discord.ActivityType.listening, name="только себя"))
     await asyncio.sleep(300)
+
+
  
     
 
@@ -123,7 +292,7 @@ class MusicControls(View):
         ctx = await bot.get_context(interaction.message)
         await leave(ctx)  # Предполагаем, что функция 'leave' правильно обрабатывает объект 'ctx'
         
-@bot.command(name='play')
+@bot.command(name='pl')
 async def play(ctx):
     remove_non_working_playlists()
     
@@ -175,7 +344,7 @@ async def next(ctx):
     else:
         await ctx.send('Алиса не находится в голосовом канале.')
 
-@bot.command(name='leave')
+@bot.command(name='stop')
 async def leave(ctx):
     if ctx.voice_client is not None:
         await ctx.voice_client.disconnect()
@@ -226,9 +395,9 @@ async def on_presence_update(before, after):
         channel_without_category = None  # Инициализация переменной channel_without_category
         channel_in_category = None  # Инициализация переменной channel_in_category
         if guild.categories:
-            category = guild.categories[0]
+            category = guild.categories[1]
             if category.channels:
-                channel_in_category = category.channels[10]
+                channel_in_category = category.channels[1]
                 print(f"Selected channel in category on {guild}: {category.name} {channel_in_category.name}")
                 # Здесь можно добавить отправку сообщения в выбранный канал в категории
             else:
@@ -290,7 +459,14 @@ async def on_presence_update(before, after):
             #if channel_without_category:
               #  await channel_without_category.send(message)
             #if channel_in_category:
-               # await channel_in_category.send(message)          
+               # await channel_in_category.send(message)
+        elif 'SimHub' in after_activity:
+            message = f'{member_mention}, скрытое сообщение в {after_activity}?'
+            print(message)  # Дублирование сообщения в консоль
+            #if channel_without_category:
+              #  await channel_without_category.send(message)
+            #if channel_in_category:
+               # await channel_in_category.send(message)                         
         elif 'Lineage' in after_activity:
             message = f'{member_mention}, уже купил пуху дракона в {after_activity}?'
             print(message)  # Дублирование сообщения в консоль
@@ -450,10 +626,10 @@ async def on_message(message):
     if message.author == bot.user or not message.content:
         return
 
-    if is_paused and message.content.lower() != "/start":
+    if is_paused and message.content.lower() != "/st":
         if "алиса" in message.content.lower():
             start_command_ctx = await bot.get_context(message)
-            await start_command_ctx.invoke(bot.get_command('start'))
+            await start_command_ctx.invoke(bot.get_command('st'))
         return
 
     if "заткнись" in message.content.lower():
@@ -461,7 +637,7 @@ async def on_message(message):
         return    
 
 
-    if message.content.startswith('/meme'):
+    if message.content.startswith('/mem'):
         # Отправляем GET-запрос на страницу для получения случайного мема
         response = requests.get('https://img.randme.me/')
         if response.status_code == 200:
@@ -522,13 +698,13 @@ async def on_message(message):
     # Проверяем, содержится ли в сообщении слово 'музык'
     if 'музык' in text:
         command_ctx = await bot.get_context(message)
-        await command_ctx.invoke(bot.get_command('play'))
+        await command_ctx.invoke(bot.get_command('pl'))
         return
     
     # Проверяем, содержится ли в сообщении слово 'выключ'
     if 'выключ' in text:
         command_ctx = await bot.get_context(message)
-        await command_ctx.invoke(bot.get_command('leave'))
+        await command_ctx.invoke(bot.get_command('stop'))
         return
     
     # Проверяем, содержится ли в сообщении слово 'некст'
